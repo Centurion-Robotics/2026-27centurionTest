@@ -6,5 +6,10 @@ Motors:
 "frontRightMotor"
 "rearLeftMotor"
 "rearRightMotor"
+-
 
 IMU = "imu"
+
+Controls:
+Left joystick for movement
+Right joystick for rotation
