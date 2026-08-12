@@ -12,10 +12,10 @@ public class MecanumDriveTrain {
     private DcMotor rearRightWheel;
 
     public MecanumDriveTrain(HardwareMap hardwareMap){
-        frontRightWheel = hardwareMap.get(DcMotor.class, "frontRightWheel");
-        frontLeftWheel = hardwareMap.get(DcMotor.class, "frontLeftWheel");
-        rearRightWheel = hardwareMap.get(DcMotor.class, "rearRightWheel");
-        rearLeftWheel = hardwareMap.get(DcMotor.class, "rearLeftWheel");
+        frontRightWheel = hardwareMap.get(DcMotor.class, "frontRightMotor");
+        frontLeftWheel = hardwareMap.get(DcMotor.class, "frontLeftMotor");
+        rearRightWheel = hardwareMap.get(DcMotor.class, "rearRightMotor");
+        rearLeftWheel = hardwareMap.get(DcMotor.class, "rearLeftMotor");
 
         frontLeftWheel.setDirection(DcMotor.Direction.REVERSE);
         rearLeftWheel.setDirection(DcMotor.Direction.REVERSE);
