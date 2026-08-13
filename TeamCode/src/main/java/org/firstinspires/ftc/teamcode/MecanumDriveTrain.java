@@ -17,8 +17,8 @@ public class MecanumDriveTrain {
         rearRightWheel = hardwareMap.get(DcMotor.class, "rearRightMotor");
         rearLeftWheel = hardwareMap.get(DcMotor.class, "rearLeftMotor");
 
-        frontLeftWheel.setDirection(DcMotor.Direction.REVERSE);
-        rearLeftWheel.setDirection(DcMotor.Direction.REVERSE);
+        frontRightWheel.setDirection(DcMotor.Direction.REVERSE);
+        rearRightWheel.setDirection(DcMotor.Direction.REVERSE);
 
         frontRightWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
         frontLeftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
@@ -37,7 +37,28 @@ public class MecanumDriveTrain {
         double rearRightPower = forward + lateral - rotation;
 
         double maxPower = 1.0;
-        double maxSpeed = 0.5;
+        double maxSpeed = 1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                ;
 
         maxPower = Math.max(maxPower, frontLeftPower);
         maxPower = Math.max(maxPower, frontRightPower);
