@@ -1,15 +1,18 @@
 package org.firstinspires.ftc.teamcode;
 
+import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
-
+@Config
 public class MecanumDriveTrain {
 
     private DcMotor frontLeftWheel;
     private DcMotor frontRightWheel;
     private DcMotor rearLeftWheel;
     private DcMotor rearRightWheel;
+
+    public static double MAX_SPEED = 1.0;
 
     public MecanumDriveTrain(HardwareMap hardwareMap){
         frontRightWheel = hardwareMap.get(DcMotor.class, "frontRightMotor");
@@ -37,37 +40,15 @@ public class MecanumDriveTrain {
         double rearRightPower = forward + lateral - rotation;
 
         double maxPower = 1.0;
-        double maxSpeed = 1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                ;
 
         maxPower = Math.max(maxPower, frontLeftPower);
         maxPower = Math.max(maxPower, frontRightPower);
         maxPower = Math.max(maxPower, rearRightPower);
         maxPower = Math.max(maxPower, rearLeftPower);
 
-        frontLeftWheel.setPower((frontLeftPower/maxPower)*maxSpeed);
-        frontRightWheel.setPower((frontRightPower/maxPower)*maxSpeed);
-        rearRightWheel.setPower((rearRightPower/maxPower)*maxSpeed);
-        rearLeftWheel.setPower((rearLeftPower/maxPower)*maxSpeed);
+        frontLeftWheel.setPower((frontLeftPower/maxPower)*MAX_SPEED);
+        frontRightWheel.setPower((frontRightPower/maxPower)*MAX_SPEED);
+        rearRightWheel.setPower((rearRightPower/maxPower)*MAX_SPEED);
+        rearLeftWheel.setPower((rearLeftPower/maxPower)*MAX_SPEED);
     }
 }
