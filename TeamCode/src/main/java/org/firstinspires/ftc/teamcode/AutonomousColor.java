@@ -26,6 +26,7 @@ import android.util.Size;
 
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
+import com.qualcomm.robotcore.hardware.DcMotor;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -73,13 +74,21 @@ import java.util.List;
 @Autonomous(name = "Concept: Vision Color-Locator (Circle)", group = "Concept")
 public class AutonomousColor extends LinearOpMode {
 
-    private int screenHeight = 480;
-    private int screenWidth = 640;
+    private  MecanumDriveTrain driveTrain;
+
+    private final int screenHeight = 480;
+    private final int screenWidth = 640;
 
     private double pGain = 0.4;
+
+
+
+
     @Override
 
     public void runOpMode() {
+
+        driveTrain = new MecanumDriveTrain(hardwareMap);
         /* Build a "Color Locator" vision processor based on the ColorBlobLocatorProcessor class.
          * - Specify the color range you are looking for. Use a predefined color, or create your own
          *
@@ -137,7 +146,7 @@ public class AutonomousColor extends LinearOpMode {
          *        CLOSING:    Will Dilate and then Erode which will tend to fill in any small holes in blob edges.
          */
         ColorBlobLocatorProcessor colorLocator = new ColorBlobLocatorProcessor.Builder()
-                .setTargetColorRange(new ColorRange(ColorSpace.HSV, new Scalar(10, 100, 40), new Scalar(25, 255, 255)))
+                .setTargetColorRange(new ColorRange(ColorSpace.RGB, new Scalar(185, 78, 2), new Scalar(235, 128, 52)))
 
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
                 .setRoi(ImageRegion.entireFrame())
@@ -247,24 +256,27 @@ public class AutonomousColor extends LinearOpMode {
             }
 
             telemetry.update();
-            sleep(100); // Match the telemetry update interval.
+            sleep(100); // Match the telemetry updateGP interval.
 
             if (!blobs.isEmpty()){
                 ColorBlobLocatorProcessor.Blob targetBlob = blobs.get(0);
                 Circle circleFitTargetBlob = targetBlob.getCircle();
-                int targetBlobX = circleFitTargetBlob.getX();
-                int targetBlobY = circleFitTargetBlob.getY();
+                float targetBlobX = circleFitTargetBlob.getX();
+                float targetBlobY = circleFitTargetBlob.getY();
                 int targetBlobArea = targetBlob.getContourArea();
 
-                if ((targetBlobX > (screenWidth / 2) + 20) && (targetBlobArea < 50)){
+                if ((targetBlobX > (screenWidth / 2) + 20) && (targetBlobArea < 5000)){
                     double rightMotorPower = ((targetBlobX - (screenWidth / 2)) / (screenWidth/2)) * pGain;
+                    driveTrain.turnLeft(rightMotorPower);
                 }
-                else if ((targetBlobX < ((screenWidth)/2) - 20) && (targetBlobArea < 50)){
+                else if ((targetBlobX < ((screenWidth)/2) - 20) && (targetBlobArea < 5000)){
                     double leftMotorPower = (((screenWidth/2) - targetBlobX) / (screenWidth/2)) * pGain;
+                    driveTrain.turnRight(leftMotorPower);
                 }
             }
             else {
                 //Spin in circle until detected ALSO CHANGE THE ROI TO A SMALLER ONE
+                driveTrain.spinScan();
             }
         }
     }

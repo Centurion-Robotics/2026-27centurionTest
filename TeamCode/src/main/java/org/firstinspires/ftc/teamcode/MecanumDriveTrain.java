@@ -11,6 +11,7 @@ public class MecanumDriveTrain {
     private DcMotor frontRightWheel;
     private DcMotor rearLeftWheel;
     private DcMotor rearRightWheel;
+    private double spinSpeed = 0.03;
 
     public static double MAX_SPEED = 1.0;
 
@@ -29,7 +30,7 @@ public class MecanumDriveTrain {
         rearLeftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    public void update(Gamepad gamepad){
+    public void updateGP(Gamepad gamepad){
         double forward = gamepad.left_stick_y;
         double lateral = gamepad.left_stick_x;
         double rotation = gamepad.right_stick_x;
@@ -50,5 +51,27 @@ public class MecanumDriveTrain {
         frontRightWheel.setPower((frontRightPower/maxPower)*MAX_SPEED);
         rearRightWheel.setPower((rearRightPower/maxPower)*MAX_SPEED);
         rearLeftWheel.setPower((rearLeftPower/maxPower)*MAX_SPEED);
+    }
+    public void spinScan(){
+        frontLeftWheel.setPower(spinSpeed);
+        frontRightWheel.setPower(-spinSpeed);
+        rearLeftWheel.setPower(spinSpeed);
+        rearRightWheel.setPower(-spinSpeed);
+    }
+
+    public void turnLeft(double turnSpeed){
+        frontLeftWheel.setPower(-turnSpeed);
+        frontRightWheel.setPower(turnSpeed);
+        rearLeftWheel.setPower(-turnSpeed);
+        rearRightWheel.setPower(turnSpeed);
+
+    }
+
+    public void turnRight(double turnSpeed){
+        frontLeftWheel.setPower(turnSpeed);
+        frontRightWheel.setPower(-turnSpeed);
+        rearLeftWheel.setPower(turnSpeed);
+        rearRightWheel.setPower(-turnSpeed);
+
     }
 }

@@ -33,7 +33,7 @@ public class mainTeleOp extends OpMode {
 
     @Override
     public void loop() {
-        driveTrain.update(gamepad1);
+        driveTrain.updateGP(gamepad1);
         localizer.update();
 
         if (gamepad1.a){
