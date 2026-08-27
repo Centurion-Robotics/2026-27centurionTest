@@ -72,7 +72,13 @@ import java.util.List;
 
 @Autonomous(name = "Concept: Vision Color-Locator (Circle)", group = "Concept")
 public class AutonomousColor extends LinearOpMode {
+
+    private int screenHeight = 480;
+    private int screenWidth = 640;
+
+    private double pGain = 0.4;
     @Override
+
     public void runOpMode() {
         /* Build a "Color Locator" vision processor based on the ColorBlobLocatorProcessor class.
          * - Specify the color range you are looking for. Use a predefined color, or create your own
@@ -161,7 +167,7 @@ public class AutonomousColor extends LinearOpMode {
          */
         VisionPortal portal = new VisionPortal.Builder()
                 .addProcessor(colorLocator)
-                .setCameraResolution(new Size(640, 480))
+                .setCameraResolution(new Size(screenWidth, screenHeight))
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .build();
 
@@ -242,6 +248,24 @@ public class AutonomousColor extends LinearOpMode {
 
             telemetry.update();
             sleep(100); // Match the telemetry update interval.
+
+            if (!blobs.isEmpty()){
+                ColorBlobLocatorProcessor.Blob targetBlob = blobs.get(0);
+                Circle circleFitTargetBlob = targetBlob.getCircle();
+                int targetBlobX = circleFitTargetBlob.getX();
+                int targetBlobY = circleFitTargetBlob.getY();
+                int targetBlobArea = targetBlob.getContourArea();
+
+                if ((targetBlobX > (screenWidth / 2) + 20) && (targetBlobArea < 50)){
+                    double rightMotorPower = ((targetBlobX - (screenWidth / 2)) / (screenWidth/2)) * pGain;
+                }
+                else if ((targetBlobX < ((screenWidth)/2) - 20) && (targetBlobArea < 50)){
+                    double leftMotorPower = (((screenWidth/2) - targetBlobX) / (screenWidth/2)) * pGain;
+                }
+            }
+            else {
+                //Spin in circle until detected ALSO CHANGE THE ROI TO A SMALLER ONE
+            }
         }
     }
 }
