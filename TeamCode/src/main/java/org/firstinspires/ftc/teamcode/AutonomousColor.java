@@ -24,9 +24,12 @@ package org.firstinspires.ftc.teamcode;
 import android.graphics.Color;
 import android.util.Size;
 
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.util.Range;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
@@ -79,8 +82,21 @@ public class AutonomousColor extends LinearOpMode {
     private final int screenHeight = 480;
     private final int screenWidth = 640;
 
-    private double pGain = 0.4;
 
+    private final double constant_proportionality = 0.1;
+    private final double constant_integration = 0.02;
+    private final double constant_derivative = 0.03;
+
+    private double previous_error = 0.0;
+
+    private double error = 0.0;
+    private double integralSum;
+    private final double maxIntegralSum = 50; // Prevent integral windup, needs to be tuned!
+    private double derivative;
+    private double output;
+    private final double maxExpectedOutput = (screenWidth/2) * constant_proportionality + maxIntegralSum * constant_integration;
+
+    private ElapsedTime runtime = new ElapsedTime();
 
 
 
@@ -89,6 +105,7 @@ public class AutonomousColor extends LinearOpMode {
     public void runOpMode() {
 
         driveTrain = new MecanumDriveTrain(hardwareMap);
+
         /* Build a "Color Locator" vision processor based on the ColorBlobLocatorProcessor class.
          * - Specify the color range you are looking for. Use a predefined color, or create your own
          *
@@ -230,12 +247,12 @@ public class AutonomousColor extends LinearOpMode {
             ColorBlobLocatorProcessor.Util.filterByCriteria(
                     ColorBlobLocatorProcessor.BlobCriteria.BY_CIRCULARITY,
                     0.6, 1, blobs);     /* filter out non-circular blobs.
-                    * NOTE: You may want to adjust the minimum value depending on your use case.
-                    * Circularity values will be affected by shadows, and will therefore vary based
-                    * on the location of the camera on your robot and venue lighting. It is strongly
-                    * encouraged to test your vision on the competition field if your event allows
-                    * sensor calibration time.
-                    */
+             * NOTE: You may want to adjust the minimum value depending on your use case.
+             * Circularity values will be affected by shadows, and will therefore vary based
+             * on the location of the camera on your robot and venue lighting. It is strongly
+             * encouraged to test your vision on the competition field if your event allows
+             * sensor calibration time.
+             */
 
             /*
              * The list of Blobs can be sorted using the same Blob attributes as listed above.
@@ -245,37 +262,54 @@ public class AutonomousColor extends LinearOpMode {
              *      ColorBlobLocatorProcessor.BlobCriteria.BY_CONTOUR_AREA, SortOrder.DESCENDING, blobs);
              */
 
-            telemetry.addLine("Circularity Radius Center");
-
-            // Display the Blob's circularity, and the size (radius) and center location of its circleFit.
-            for (ColorBlobLocatorProcessor.Blob b : blobs) {
-
-                Circle circleFit = b.getCircle();
-                telemetry.addLine(String.format("%5.3f      %3d     (%3d,%3d)",
-                           b.getCircularity(), (int) circleFit.getRadius(), (int) circleFit.getX(), (int) circleFit.getY()));
-            }
-
-            telemetry.update();
-            sleep(100); // Match the telemetry updateGP interval.
+//            telemetry.addLine("Circularity Radius Center");
+//
+//            // Display the Blob's circularity, and the size (radius) and center location of its circleFit.
+//            for (ColorBlobLocatorProcessor.Blob b : blobs) {
+//
+//                Circle circleFit = b.getCircle();
+//                telemetry.addLine(String.format("%5.3f      %3d     (%3d,%3d)",
+//                        b.getCircularity(), (int) circleFit.getRadius(), (int) circleFit.getX(), (int) circleFit.getY()));
+//            }
+//
+//            telemetry.update();
+//            sleep(100); // Match the telemetry updateGP interval.
 
             if (!blobs.isEmpty()){
+                runtime.reset();
                 ColorBlobLocatorProcessor.Blob targetBlob = blobs.get(0);
                 Circle circleFitTargetBlob = targetBlob.getCircle();
                 float targetBlobX = circleFitTargetBlob.getX();
                 float targetBlobY = circleFitTargetBlob.getY();
                 int targetBlobArea = targetBlob.getContourArea();
 
-                if ((targetBlobX > (screenWidth / 2) + 20) && (targetBlobArea < 5000)){
-                    double rightMotorPower = ((targetBlobX - (screenWidth / 2)) / (screenWidth/2)) * pGain;
-                    driveTrain.turnLeft(rightMotorPower);
+                if ((targetBlobX > (screenWidth/2) + 20) && (targetBlobArea < 5000)){
+
+                    error = Math.abs(screenWidth/2 - targetBlobX);
+                    integralSum += error * runtime.seconds();
+//                    derivative = (error - previous_error)/runtime.seconds();
+                    output = ((constant_proportionality * error) + (constant_integration * integralSum))/maxExpectedOutput;
+                    driveTrain.turnLeft(output);
+
+                    previous_error = error;
+
                 }
                 else if ((targetBlobX < ((screenWidth)/2) - 20) && (targetBlobArea < 5000)){
-                    double leftMotorPower = (((screenWidth/2) - targetBlobX) / (screenWidth/2)) * pGain;
-                    driveTrain.turnRight(leftMotorPower);
+
+                    error = Math.abs(screenWidth/2 - targetBlobX);
+                    integralSum += error * runtime.seconds();
+                    integralSum = Range.clip(integralSum, 0, 50);
+//                    derivative = (error - previous_error)/runtime.seconds();
+                    output = ((constant_proportionality * error) + (constant_integration * integralSum))/maxExpectedOutput;
+
+                    driveTrain.turnRight(output);
+
+                    previous_error = error;
                 }
             }
             else {
                 //Spin in circle until detected ALSO CHANGE THE ROI TO A SMALLER ONE
+                integralSum = 0.0;
                 driveTrain.spinScan();
             }
         }

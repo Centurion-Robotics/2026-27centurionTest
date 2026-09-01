@@ -2,6 +2,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.config.Config;
 import com.qualcomm.robotcore.hardware.DcMotor;
+
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 @Config
@@ -11,7 +12,7 @@ public class MecanumDriveTrain {
     private DcMotor frontRightWheel;
     private DcMotor rearLeftWheel;
     private DcMotor rearRightWheel;
-    private double spinSpeed = 0.03;
+    private final double spinSpeed = 0.3;
 
     public static double MAX_SPEED = 1.0;
 
