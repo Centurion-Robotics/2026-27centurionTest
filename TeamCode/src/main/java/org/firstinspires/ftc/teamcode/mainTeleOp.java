@@ -6,7 +6,7 @@ import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 
 @TeleOp(name="Main TeleOp")
 @SuppressWarnings("unused")
-public class MainTeleOp extends OpMode {
+public class mainTeleOp extends OpMode {
     private  MecanumDriveTrain driveTrain;
     private TeleOpLocalizer localizer;
     @Override
