@@ -1,0 +1,4 @@
+- [x] Run `./gradlew clean` to clear build artifacts and locks (FAILED: Unable to delete directories)
+- [x] Remove dynamic build timestamp to reduce file locks (Done, but Clean still fails)
+- [ ] Run `:TeamCode:assembleDebug` to verify the build
+- [ ] Create walkthrough of the resolution
