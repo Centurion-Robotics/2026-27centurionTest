@@ -5,14 +5,17 @@ import com.qualcomm.robotcore.hardware.DcMotor;
 
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.qualcomm.robotcore.util.ElapsedTime;
+
 @Config
 public class MecanumDriveTrain {
+    private ElapsedTime spinTime = new ElapsedTime();
 
     private DcMotor frontLeftWheel;
     private DcMotor frontRightWheel;
     private DcMotor rearLeftWheel;
     private DcMotor rearRightWheel;
-    private final double spinSpeed = 0.3;
+    private final double spinSpeed = 0.4;
 
     public static double MAX_SPEED = 1.0;
 
@@ -54,25 +57,39 @@ public class MecanumDriveTrain {
         rearLeftWheel.setPower((rearLeftPower/maxPower)*MAX_SPEED);
     }
     public void spinScan(){
-        frontLeftWheel.setPower(spinSpeed);
-        frontRightWheel.setPower(-spinSpeed);
-        rearLeftWheel.setPower(spinSpeed);
-        rearRightWheel.setPower(-spinSpeed);
+        spinTime.reset();
+
+        while (spinTime.seconds() <= 0.1) {
+            frontLeftWheel.setPower(spinSpeed);
+            frontRightWheel.setPower(-spinSpeed);
+            rearLeftWheel.setPower(spinSpeed);
+            rearRightWheel.setPower(-spinSpeed);
+        }
+
+        while(spinTime.seconds() <= 0.2){
+            frontLeftWheel.setPower(0);
+            frontRightWheel.setPower(0);
+            rearLeftWheel.setPower(0);
+            rearRightWheel.setPower(0);
+
+        }
+
+
     }
 
-    public void turnLeft(double turnSpeed){
-        frontLeftWheel.setPower(-turnSpeed);
-        frontRightWheel.setPower(turnSpeed);
-        rearLeftWheel.setPower(-turnSpeed);
-        rearRightWheel.setPower(turnSpeed);
-
-    }
-
-    public void turnRight(double turnSpeed){
+    public void autoTurn(double turnSpeed){
         frontLeftWheel.setPower(turnSpeed);
         frontRightWheel.setPower(-turnSpeed);
         rearLeftWheel.setPower(turnSpeed);
         rearRightWheel.setPower(-turnSpeed);
 
     }
-}
+
+    public void motorRun(double speed){
+        frontLeftWheel.setPower(speed);
+
+    }
+    }
+
+
+

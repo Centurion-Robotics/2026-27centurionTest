@@ -74,8 +74,23 @@ import java.util.List;
  */
 
 
-@Autonomous(name = "Concept: Vision Color-Locator (Circle)", group = "Concept")
+@Autonomous(name = "Blob Detection", group = "Concept")
 public class AutonomousColor extends LinearOpMode {
+
+    private final double CAMERA_Y_FOV = 27.5;
+    private final double CAMERA_X_FOV = 60;
+
+    //In CM
+    private final double CAMERA_HEIGHT = 20;
+
+    private final double CAMERA_DOWN_OFFSET_ANGLE = 30;
+
+    private double distanceY;
+    private double distanceX;
+    private double angleY;
+    private double angleX;
+
+    private double distance;
 
     private  MecanumDriveTrain driveTrain;
 
@@ -83,18 +98,21 @@ public class AutonomousColor extends LinearOpMode {
     private final int screenWidth = 640;
 
 
-    private final double constant_proportionality = 0.1;
-    private final double constant_integration = 0.02;
-    private final double constant_derivative = 0.03;
+    private final double constant_proportionality = 0.25;
+    private final double constant_integration = 0.03;
+    private final double constant_derivative = 0.045;
 
     private double previous_error = 0.0;
 
     private double error = 0.0;
     private double integralSum;
-    private final double maxIntegralSum = 50; // Prevent integral windup, needs to be tuned!
-    private double derivative;
+    private double maxI = 4;
+    private double derivative = 0;
+    private double maxD = 0.15;
     private double output;
-    private final double maxExpectedOutput = (screenWidth/2) * constant_proportionality + maxIntegralSum * constant_integration;
+
+    private final int deadBand = 50;
+    private final double minMotorPower = 0.05;
 
     private ElapsedTime runtime = new ElapsedTime();
 
@@ -163,8 +181,7 @@ public class AutonomousColor extends LinearOpMode {
          *        CLOSING:    Will Dilate and then Erode which will tend to fill in any small holes in blob edges.
          */
         ColorBlobLocatorProcessor colorLocator = new ColorBlobLocatorProcessor.Builder()
-                .setTargetColorRange(new ColorRange(ColorSpace.RGB, new Scalar(185, 78, 2), new Scalar(235, 128, 52)))
-
+                .setTargetColorRange(new ColorRange(ColorSpace.HSV, new Scalar(0, 157, 110), new Scalar(15, 235, 255)))
                 .setContourMode(ColorBlobLocatorProcessor.ContourMode.EXTERNAL_ONLY)
                 .setRoi(ImageRegion.entireFrame())
                 .setDrawContours(true)   // Show contours on the Stream Preview
@@ -173,8 +190,8 @@ public class AutonomousColor extends LinearOpMode {
                 .setBlurSize(5)          // Smooth the transitions between different colors in image
 
                 // the following options have been added to fill in perimeter holes.
-                .setDilateSize(20)       // Expand blobs to fill any divots on the edges
-                .setErodeSize(20)        // Shrink blobs back to original size
+                .setDilateSize(15)       // Expand blobs to fill any divots on the edges
+                .setErodeSize(15)        // Shrink blobs back to original size
                 .setMorphOperationType(ColorBlobLocatorProcessor.MorphOperationType.CLOSING)
 
                 .build();
@@ -242,7 +259,7 @@ public class AutonomousColor extends LinearOpMode {
              */
             ColorBlobLocatorProcessor.Util.filterByCriteria(
                     ColorBlobLocatorProcessor.BlobCriteria.BY_CONTOUR_AREA,
-                    50, 20000, blobs);  // filter out very small blobs.
+                    50, 200000, blobs);  // filter out very small blobs.
 
             ColorBlobLocatorProcessor.Util.filterByCriteria(
                     ColorBlobLocatorProcessor.BlobCriteria.BY_CIRCULARITY,
@@ -276,42 +293,63 @@ public class AutonomousColor extends LinearOpMode {
 //            sleep(100); // Match the telemetry updateGP interval.
 
             if (!blobs.isEmpty()){
-                runtime.reset();
+//                double dt = runtime.seconds();
+//                runtime.reset();
+//
                 ColorBlobLocatorProcessor.Blob targetBlob = blobs.get(0);
                 Circle circleFitTargetBlob = targetBlob.getCircle();
                 float targetBlobX = circleFitTargetBlob.getX();
                 float targetBlobY = circleFitTargetBlob.getY();
-                int targetBlobArea = targetBlob.getContourArea();
+                double targetBlobArea = circleFitTargetBlob.getRadius() * circleFitTargetBlob.getRadius() * Math.PI;
 
-                if ((targetBlobX > (screenWidth/2) + 20) && (targetBlobArea < 5000)){
+                angleY = CAMERA_DOWN_OFFSET_ANGLE + Range.scale(targetBlobY, 0, screenHeight, -CAMERA_Y_FOV/2, CAMERA_Y_FOV/2);
+                distanceY = CAMERA_HEIGHT/Math.tan(angleY);
 
-                    error = Math.abs(screenWidth/2 - targetBlobX);
-                    integralSum += error * runtime.seconds();
-//                    derivative = (error - previous_error)/runtime.seconds();
-                    output = ((constant_proportionality * error) + (constant_integration * integralSum))/maxExpectedOutput;
-                    driveTrain.turnLeft(output);
+                //Left is positive, right is negative
+                angleX = Range.scale(targetBlobX, 0, screenWidth, CAMERA_X_FOV/2, -CAMERA_X_FOV/2);
+                distanceX = Math.tan(angleX) * distanceY;
 
-                    previous_error = error;
+                distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
 
-                }
-                else if ((targetBlobX < ((screenWidth)/2) - 20) && (targetBlobArea < 5000)){
 
-                    error = Math.abs(screenWidth/2 - targetBlobX);
-                    integralSum += error * runtime.seconds();
-                    integralSum = Range.clip(integralSum, 0, 50);
-//                    derivative = (error - previous_error)/runtime.seconds();
-                    output = ((constant_proportionality * error) + (constant_integration * integralSum))/maxExpectedOutput;
-
-                    driveTrain.turnRight(output);
-
-                    previous_error = error;
-                }
+                
+//
+//                if (!((targetBlobX >= (screenWidth/2.0 + deadBand)) && (targetBlobX <= (screenWidth/2.0 - deadBand)))){
+//
+//
+//                    error = screenWidth/2.0 - targetBlobX;
+//                    double normalizedError = error / (screenWidth / 2.0);
+//
+//                    integralSum += normalizedError * dt;
+//                    integralSum = Range.clip(integralSum, -maxI, maxI);
+//
+//                    double rawDerivative = (normalizedError - previous_error) / dt;
+//                    derivative = 0.7 * derivative + 0.3 * rawDerivative;
+//                    derivative = Range.clip(derivative, -maxD, maxD);
+//
+//                    output = constant_proportionality * normalizedError + constant_integration * integralSum + constant_derivative * derivative;
+//                    output = Range.clip(output, -0.4, 0.4);
+//
+//                    if (output > -minMotorPower && output < minMotorPower) {
+//                        output = (output < 0) ? -minMotorPower : minMotorPower;
+//                    }
+//
+//                    driveTrain.autoTurn(output);
+//
+//
+//                    previous_error = normalizedError;
+//
+//                }
+//                else{
+//                    driveTrain.autoTurn(0);
+//                }
             }
-            else {
-                //Spin in circle until detected ALSO CHANGE THE ROI TO A SMALLER ONE
-                integralSum = 0.0;
-                driveTrain.spinScan();
-            }
-        }
+//            else {
+////                //Spin in circle until detected ALSO CHANGE THE ROI TO A SMALLER ONE
+//                integralSum = 0.0;
+////                driveTrain.spinScan();
+//                driveTrain.autoTurn(0);
+//            }
+//        }
     }
 }
