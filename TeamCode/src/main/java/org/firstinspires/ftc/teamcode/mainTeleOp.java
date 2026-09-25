@@ -17,19 +17,18 @@ public class mainTeleOp extends OpMode {
 
     private Servo backdoorServo;
 
-    private DcMotor intakeMotor;
+    private DcMotor outtakeMotor;
 
 
     @Override
     public void init() {
-        // Set up multiple telemetry (Driver Station + Dashboard)
         telemetry = new MultipleTelemetry(telemetry, FtcDashboard.getInstance().getTelemetry());
 
         driveTrain = new MecanumDriveTrain(hardwareMap);
         localizer = new TeleOpLocalizer(hardwareMap);
 
-        backdoorServo = hardwareMap.get(Servo.class, "backdoorServo");
-        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+//        backdoorServo = hardwareMap.get(Servo.class, "backdoorServo");
+        outtakeMotor = hardwareMap.get(DcMotor.class, "testOuttakeMotor");
     }
 
     @Override
@@ -37,17 +36,17 @@ public class mainTeleOp extends OpMode {
         driveTrain.updateGP(gamepad1);
         localizer.update();
 
-        if (gamepad1.a){
-            backdoorServo.setPosition(0);
-
-        }else{
-            backdoorServo.setPosition(0.5);
-        }
-
+//        if (gamepad1.a){
+//            backdoorServo.setPosition(0);
+//
+//        }else{
+//            backdoorServo.setPosition(0.5);
+//        }
+//
         if (gamepad1.b){
-            intakeMotor.setPower(0.5);
+            outtakeMotor.setPower(0.5);
         }else{
-            intakeMotor.setPower(0);
+            outtakeMotor.setPower(0);
         }
 
         telemetry.addData("yaw:", localizer.yaw);
