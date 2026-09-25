@@ -77,13 +77,13 @@ import java.util.List;
 @Autonomous(name = "Blob Detection", group = "Concept")
 public class AutonomousColor extends LinearOpMode {
 
-    private final double CAMERA_Y_FOV = 27.5;
-    private final double CAMERA_X_FOV = 60;
+    private final double CAMERA_Y_FOV = Math.toRadians(31.6);
+    private final double CAMERA_X_FOV = Math.toRadians(53.4);
 
     //In CM
-    private final double CAMERA_HEIGHT = 20;
+    private final double CAMERA_HEIGHT = 33.5;
 
-    private final double CAMERA_DOWN_OFFSET_ANGLE = 30;
+    private final double CAMERA_DOWN_OFFSET_ANGLE = 0;
 
     private double distanceY;
     private double distanceX;
@@ -91,8 +91,8 @@ public class AutonomousColor extends LinearOpMode {
     private double angleX;
 
     private double distance;
-
-    private  MecanumDriveTrain driveTrain;
+//
+//    private  MecanumDriveTrain driveTrain;
 
     private final int screenHeight = 480;
     private final int screenWidth = 640;
@@ -121,8 +121,8 @@ public class AutonomousColor extends LinearOpMode {
     @Override
 
     public void runOpMode() {
-
-        driveTrain = new MecanumDriveTrain(hardwareMap);
+//
+//        driveTrain = new MecanumDriveTrain(hardwareMap);
 
         /* Build a "Color Locator" vision processor based on the ColorBlobLocatorProcessor class.
          * - Specify the color range you are looking for. Use a predefined color, or create your own
@@ -310,6 +310,11 @@ public class AutonomousColor extends LinearOpMode {
                 distanceX = Math.tan(angleX) * distanceY;
 
                 distance = Math.sqrt(distanceX * distanceX + distanceY * distanceY);
+                telemetry.addData("DistanceX: ", distanceX);
+                telemetry.addData("DistanceY: ", distanceY);
+                telemetry.addData("Distance: ", distance);
+                telemetry.update();
+
 
 
                 
@@ -350,6 +355,6 @@ public class AutonomousColor extends LinearOpMode {
 ////                driveTrain.spinScan();
 //                driveTrain.autoTurn(0);
 //            }
-//        }
+        }
     }
 }
