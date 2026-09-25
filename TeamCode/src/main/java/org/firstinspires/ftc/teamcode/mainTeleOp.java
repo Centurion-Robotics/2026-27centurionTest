@@ -3,6 +3,7 @@ package org.firstinspires.ftc.teamcode;
 
 import com.acmerobotics.dashboard.FtcDashboard;
 import com.acmerobotics.dashboard.telemetry.MultipleTelemetry;
+import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.hardware.DcMotor;
@@ -16,7 +17,10 @@ public class mainTeleOp extends OpMode {
 
     private Servo backdoorServo;
 
+
     private DcMotor intakeMotor;
+
+    private DcMotor outtakeMotorTest;
 
 
     @Override
@@ -27,13 +31,18 @@ public class mainTeleOp extends OpMode {
         driveTrain = new MecanumDriveTrain(hardwareMap);
         localizer = new TeleOpLocalizer(hardwareMap);
 
+        outtakeMotorTest = hardwareMap.get(DcMotor.class, "testOuttakeMotor");
+
+
+
+
         backdoorServo = hardwareMap.get(Servo.class, "backdoorServo");
         intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
     }
 
     @Override
     public void loop() {
-        driveTrain.update(gamepad1);
+        driveTrain.updateRelative(gamepad1, localizer);
         localizer.update();
 
         if (gamepad1.a){
@@ -44,15 +53,15 @@ public class mainTeleOp extends OpMode {
         }
 
         if (gamepad1.b){
-            intakeMotor.setPower(0.5);
+            outtakeMotorTest.setPower(-1);
         }else{
-            intakeMotor.setPower(0);
+            outtakeMotorTest.setPower(0);
         }
 
         telemetry.addData("yaw:", localizer.yaw);
         telemetry.addData("pitch:", localizer.pitch);
         telemetry.addData("roll:", localizer.roll);
-        telemetry.addData("backdoorServo Position: ",  backdoorServo.getPosition());
+//        telemetry.addData("backdoorServo Position: ",  backdoorServo.getPosition());
 
         telemetry.update();
     }
