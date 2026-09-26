@@ -90,4 +90,11 @@ public class MecanumDriveTrain {
         rearRightWheel.setPower((rearRightPower/maxPower)*MAX_SPEED);
         rearLeftWheel.setPower((rearLeftPower/maxPower)*MAX_SPEED);
     }
+
+    public void motorRun(double power) {
+        frontLeftWheel.setPower(power);
+        frontRightWheel.setPower(power);
+        rearLeftWheel.setPower(power);
+        rearRightWheel.setPower(power);
+    }
 }
