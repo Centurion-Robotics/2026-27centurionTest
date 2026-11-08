@@ -1,7 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
 import android.util.Size;
-
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 
@@ -17,10 +16,14 @@ public class turretTrackingTest extends OpMode {
     private WebcamName webCam;
     private AprilTagProcessor aprilTag;
     private VisionPortal portal;
+    //NOTE: when giving april tag pose for turret class
+    //make sure to give absolute position
+    //pose = apriltagPose + robotPose
 
     @Override
     public void init(){
         webCam = hardwareMap.get(WebcamName.class, "WebCam 1");
+        //Tune coefficients for apriltag
         aprilTag = AprilTagProcessor.easyCreateWithDefaults();
         portal = new VisionPortal.Builder()
                 .setCamera(webCam)
@@ -37,9 +40,18 @@ public class turretTrackingTest extends OpMode {
         telemetry.addData("Camera State", portal.getCameraState());
 
         List<AprilTagDetection> currentDetections = aprilTag.getDetections();
+        telemetry.addData("# AprilTags Detected", currentDetections.size());
+
         for (AprilTagDetection detection : currentDetections){
-            if (detection.metadata != null){
-                telemetry.addData("Tag " + detection.id, detection.metadata.name);
+            if (detection.ftcPose != null){
+                telemetry.addData("--- Tag ID", detection.id);
+                if (detection.metadata != null) {
+                    telemetry.addData("Name", detection.metadata.name);
+                }
+                telemetry.addData("Range", "%.2f inches", detection.ftcPose.range);
+                telemetry.addData("Bearing", "%.2f degrees", detection.ftcPose.bearing);
+                telemetry.addData("X (Lateral)", "%.2f inches", detection.ftcPose.x);
+                telemetry.addData("Y (Forward)", "%.2f inches", detection.ftcPose.y);
             }
         }
         telemetry.update();

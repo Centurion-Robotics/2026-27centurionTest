@@ -13,6 +13,8 @@ public class TeleOpLocalizer {
     public double roll;
 
     public TeleOpLocalizer(HardwareMap hardwareMap){
+
+        //IMPORTANT for Sam: use pedro pathing instead
         pinpoint = hardwareMap.get(GoBildaPinpointDriver.class, "pinpoint");
         pinpoint.setOffsets(0, 0, DistanceUnit.MM);
         pinpoint.setEncoderResolution(GoBildaPinpointDriver.GoBildaOdometryPods.goBILDA_4_BAR_POD);
