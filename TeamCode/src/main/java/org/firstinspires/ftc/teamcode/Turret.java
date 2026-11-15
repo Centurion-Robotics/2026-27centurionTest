@@ -4,19 +4,22 @@ import com.pedropathing.geometry.Pose;
 import com.qualcomm.robotcore.hardware.AnalogInput;
 import com.qualcomm.robotcore.hardware.CRServo;
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
 import org.firstinspires.ftc.robotcore.external.Telemetry;
-import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
-public class turret {
+
+public class Turret {
     //moves the ball up to be launched
     private DcMotor launchWheel;
     private enum STATES  {
             IDLE,
             SPINNING_UP,
             READY_TO_LAUNCH,
+            LAUNCHING,
 
     }
     private STATES state;
@@ -24,29 +27,33 @@ public class turret {
     private Telemetry telemetry;
 
     //fly wheel shooter
-    private DcMotor outtakeWheel;
+    private Servo launchServo;
+    private DcMotorEx outtakeWheel;
     //the servo which rotates the turret laterally
     private CRServo yawServo;
     private AnalogInput yawServoEncoder;
     private CRServo pitchServo;
     private AnalogInput pitchServoEncoder;
+    private ElapsedTime launchTimer;
     private double actualYaw;
     private double lastYaw;
     private double turns;
-    public turret(HardwareMap hardwareMap, Telemetry t){
+
+    public Turret(HardwareMap hardwareMap, Telemetry t){
         yawServo = hardwareMap.get(CRServo.class, "yawServo");
         pitchServo = hardwareMap.get(CRServo.class, "pitchServo");
         yawServoEncoder = hardwareMap.get(AnalogInput.class, "yawServoEncoder");
         pitchServoEncoder = hardwareMap.get(AnalogInput.class, "pitchServoEncoder");
+        outtakeWheel = hardwareMap.get(DcMotorEx.class, "outtakeMotor");
+        outtakeWheel.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
         state = STATES.IDLE;
         telemetry = t;
-
+        launchTimer = new ElapsedTime();
     }
     //Assume apriltagPose as a parameter gives the absolute field pose
-    private void updateYaw(Pose apriltagPose, Pose robotPose){
-
-        double xDist = apriltagPose.getX() - robotPose.getX();
-        double yDist = apriltagPose.getY() - robotPose.getY();
+    private void updateYaw(Pose cellPose, Pose robotPose){
+        double xDist = cellPose.getX() - robotPose.getX();
+        double yDist = cellPose.getY() - robotPose.getY();
         double fieldAngle = Math.atan2(yDist, xDist);
         double targetYaw = (fieldAngle - robotPose.getHeading())*(113.0/15.0);
         double currentYaw = ((yawServoEncoder.getVoltage()/yawServoEncoder.getMaxVoltage())*2*Math.PI);
@@ -68,24 +75,62 @@ public class turret {
 
         lastYaw = currentYaw;
     }
-    private void updatePitch(Pose apriltagPose, Pose robotPose){
+
+
+    private void updatePitch(Pose cellPose, Pose robotPose){
 
     }
 
-    public void update(Pose apriltagPose, Pose robotPose){
+    public void spinUp(){
+        state = STATES.SPINNING_UP;
+    }
+    public void launch(){
+        if (state == STATES.READY_TO_LAUNCH){
+            state = STATES.LAUNCHING;
+            launchTimer.reset();
+        }
+    }
+    public STATES getTurretState(){
+        return state;
+    }
+
+    public void update(Pose cellPose, Pose robotPose, Intake intake){
         switch (state){
             case IDLE:
-                updateYaw(apriltagPose, robotPose);
-                updatePitch(apriltagPose, robotPose);
+                updateYaw(cellPose, robotPose);
+                updatePitch(cellPose, robotPose);
+
+                outtakeWheel.setPower(0);
+                launchServo.setPosition(0);
                 break;
             case SPINNING_UP:
-                updateYaw(apriltagPose, robotPose);
-                updatePitch(apriltagPose, robotPose);
+                double revolutionsPerSec = outtakeWheel.getVelocity()/28;
+                updateYaw(cellPose, robotPose);
+                updatePitch(cellPose, robotPose);
+
+                outtakeWheel.setPower(1);
+                launchServo.setPosition(0);
+
+                telemetry.addData("Outtake velocity (Revolutons Per Sec)", revolutionsPerSec);
+
+                if (revolutionsPerSec >= 75){
+                    state = STATES.READY_TO_LAUNCH;
+                }
+
                 break;
             case READY_TO_LAUNCH:
-                updateYaw(apriltagPose, robotPose);
-                updatePitch(apriltagPose, robotPose);
+                //turn on haptics
+                updateYaw(cellPose, robotPose);
+                updatePitch(cellPose, robotPose);
                 break;
+            case LAUNCHING:
+                intake.pullIn();
+                launchServo.setPosition(1);
+                if (launchTimer.milliseconds()>1250){
+                    state = STATES.IDLE;
+                    launchServo.setPosition(0);
+                    intake.stop();
+                }
         }
         telemetry.addData("Turret State:", state);
 

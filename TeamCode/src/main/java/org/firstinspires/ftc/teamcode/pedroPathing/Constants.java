@@ -18,7 +18,7 @@ public class Constants {
 
     static {
         // Follower Constants
-        followerConstants.mass = 12.5; // TODO: Weigh robot in kg!
+        followerConstants.mass = 12.5; // TODO: Weigh robot in kg
 
         // Mecanum Drivetrain Constants
         mecanumConstants.leftFrontMotorName = "frontLeftMotor";

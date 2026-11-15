@@ -5,6 +5,7 @@ import com.qualcomm.hardware.bosch.BNO055IMU;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.Gamepad;
 import com.qualcomm.robotcore.hardware.HardwareMap;
+import com.pedropathing.follower.Follower;
 
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 
@@ -33,7 +34,7 @@ public class MecanumDriveTrain {
         rearLeftWheel.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
     }
 
-    public void updateRelative(Gamepad gamepad, TeleOpLocalizer localizer){
+    public void updateRelative(Gamepad gamepad, Follower follower){
         double forward = -gamepad.left_stick_y;
         double lateral = gamepad.left_stick_x;
         double rotation = -gamepad.right_stick_x;
@@ -41,7 +42,7 @@ public class MecanumDriveTrain {
         double theta = Math.atan2(forward, lateral);
         double r = Math.hypot(lateral, forward);
 
-        theta = AngleUnit.normalizeRadians(theta - localizer.yaw);
+        theta = AngleUnit.normalizeRadians(theta - follower.getPose().getHeading());
 
         double newForward = r * Math.sin(theta);
         double newLateral = r * Math.cos(theta);
