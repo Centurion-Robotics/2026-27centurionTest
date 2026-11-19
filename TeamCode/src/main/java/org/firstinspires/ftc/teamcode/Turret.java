@@ -39,6 +39,10 @@ public class Turret {
     private double lastYaw;
     private double turns;
 
+    private static double Kp;
+    private static double Ki;
+    private static double Kd;
+
     public Turret(HardwareMap hardwareMap, Telemetry t){
         yawServo = hardwareMap.get(CRServo.class, "yawServo");
         pitchServo = hardwareMap.get(CRServo.class, "pitchServo");
