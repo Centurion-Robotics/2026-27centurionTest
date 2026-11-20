@@ -19,7 +19,7 @@ public class PIDController {
 
     public PIDController(double Kp, double Ki, double Kd){
         this.Kp = Kp;
-        this.Ki = Kd;
+        this.Ki = Ki;
         this.Kd = Kd;
         time = new ElapsedTime();
         lastTime = 0;
@@ -30,7 +30,7 @@ public class PIDController {
         double dt = (currentTime - lastTime)*1e-9;
         integral += error*dt;
         derivative = (error - lastError)/dt;
-        output = Kp*dt + Ki*integral + Kd*derivative;
+        output = Kp*error + Ki*integral + Kd*derivative;
 
         lastError = error;
         lastTime = currentTime;
@@ -43,5 +43,12 @@ public class PIDController {
         lastTime = 0;
         lastError = 0;
         integral = 0;
+        time.reset();
+    }
+
+    public void setConstants(double Kp, double Ki, double Kd){
+        this.Kp = Kp;
+        this.Ki = Ki;
+        this.Kd = Kd;
     }
 }
